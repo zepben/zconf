@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
 }
 
-group = "me.user"
+group = "com.zepben.zconf"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -26,7 +26,7 @@ kotlin {
     nativeTarget.apply {
         binaries {
             executable {
-                entryPoint = "main"
+                entryPoint = "$group.main"
             }
         }
     }
