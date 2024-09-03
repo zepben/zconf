@@ -34,6 +34,7 @@ kotlin {
     sourceSets {
         nativeMain.dependencies {
             implementation(libs.kotlinxSerializationJson)
+            implementation(libs.clikt)
         }
     }
 }
