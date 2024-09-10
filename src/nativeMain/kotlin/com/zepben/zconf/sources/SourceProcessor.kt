@@ -1,11 +1,10 @@
 package com.zepben.zconf.sources
 
-
-typealias NeutralConfig = Map<String, String>
+import com.zepben.zconf.model.ConfigElement
 
 abstract class SourceProcessor(val input: String) {
 
-    val properties: NeutralConfig by lazy { execute() }
+    val properties: ConfigElement by lazy { execute() }
 
-    protected abstract fun execute(): NeutralConfig
+    protected abstract fun execute(): ConfigElement
 }

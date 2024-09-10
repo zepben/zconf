@@ -1,5 +1,9 @@
 package com.zepben.zconf.sources
 
+import com.zepben.zconf.model.ConfigArray
+import com.zepben.zconf.model.ConfigElement
+import com.zepben.zconf.model.ConfigObject
+import com.zepben.zconf.model.ConfigValue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import kotlinx.serialization.json.*
@@ -9,8 +13,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 open class EnvBlobSourceProcessor(input: String): SourceProcessor(input) {
     @OptIn(ExperimentalForeignApi::class, ExperimentalEncodingApi::class)
-    override fun execute(): NeutralConfig {
-        val envValue = getenv(input)?.toKString() ?: return mapOf()
+    override fun execute(): ConfigElement {
+        val envValue = getenv(input)?.toKString() ?: return ConfigObject()
         val decodedValue = Base64.Default.decode(envValue)
         val json = Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
         return convertToIntermediateForm(json)
@@ -21,13 +25,15 @@ open class EnvBlobSourceProcessor(input: String): SourceProcessor(input) {
         return decodedValue.toKString()
     }
 
-    private fun convertToIntermediateForm(json: JsonElement): Map<String, String> {
-        val accumulator = mutableMapOf<String, String>()
+    private fun convertToIntermediateForm(json: JsonElement): ConfigObject {
+        require(json is JsonObject)
+
+        val accumulator = ConfigObject() // just assume that we always return a full json document
         convertToIntermediateForm(json, "", accumulator)
-        return accumulator.toMap()
+        return accumulator
     }
 
-    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: MutableMap<String, String>) {
+    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: ConfigObject) {
         when (json) {
             is JsonNull -> return // We don't care about nulls
             is JsonPrimitive -> thing[path.removePrefix(".")] = json.content
