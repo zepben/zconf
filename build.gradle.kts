@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.koTest)
 }
 
 group = "com.zepben.zconf"
@@ -8,6 +9,11 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+        name = "MavenCentralSnapshots"
+        mavenContent { snapshotsOnly() }
+    }
 }
 
 kotlin {
@@ -34,7 +40,12 @@ kotlin {
     sourceSets {
         nativeMain.dependencies {
             implementation(libs.kotlinxSerializationJson)
+            implementation(libs.kotlinxIoCore)
             implementation(libs.clikt)
+        }
+
+        nativeTest.dependencies {
+            implementation(libs.koTestFramework)
         }
     }
 }

@@ -1,12 +1,18 @@
 [versions]
 kotlin = "2.0.20"
 kotlinxSerialization = "1.7.2"
+kotlinxIo = "0.5.3"
 clikt = "4.2.2"
+koTest = "6.0.0-SNAPSHOT"
 
 [libraries]
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinxIoCore = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+koTestFramework = { module = "io.kotest:kotest-framework-engine", version.ref = "koTest" }
+koTestAssertion = { module = "io.kotest:kotest-assertions-core", version.ref = "koTest" }
 
 [plugins]
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+koTest = { id = "io.kotest.multiplatform", version.ref = "koTest" }

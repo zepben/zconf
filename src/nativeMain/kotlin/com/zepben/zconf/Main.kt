@@ -2,6 +2,13 @@ package com.zepben.zconf
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import com.zepben.zconf.sources.EnvBlobSourceProcessor
+import com.zepben.zconf.util.Gzip
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.toKString
+import platform.posix.getenv
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class Main: CliktCommand(name = "zconf") {
     override fun run() {
@@ -9,4 +16,13 @@ class Main: CliktCommand(name = "zconf") {
     }
 }
 
-fun main(args: Array<String>) = Main().subcommands(Version()).main(args)
+//fun main(args: Array<String>) = Main().subcommands(Version(), Generate()).main(args)
+
+@OptIn(ExperimentalEncodingApi::class, ExperimentalForeignApi::class)
+fun main(args: Array<String>) {
+    val test = getenv("TEST_ENV")!!.toKString()
+    println("test")
+    println(test)
+    println("after")
+    println( EnvBlobSourceProcessor("TEST_ENV").properties)
+}
