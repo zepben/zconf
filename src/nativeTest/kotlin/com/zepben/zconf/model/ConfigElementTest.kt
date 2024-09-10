@@ -1,5 +1,6 @@
 package com.zepben.zconf.model
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -41,5 +42,26 @@ class ConfigModelTest : FunSpec({
         root["auth.perms.0"] shouldBe  ConfigValue("read")
         root["auth.perms.1"] shouldBe  ConfigValue("write")
         root["auth.other.0.key"] shouldBe  ConfigValue("value")
+    }
+
+    test("exceptions when setting nested value when value exists") {
+        root["foo"] = "bar"
+
+        shouldThrow<IllegalArgumentException> {
+            root["foo.bar"] = "baz"
+            Unit
+        }
+
+        shouldThrow<IllegalArgumentException> {
+            root["foo.0"] = "baz"
+            Unit
+        }
+    }
+
+    test("invalid array indexes") {
+        shouldThrow<IllegalArgumentException> {
+            root["foo.-1"] = "baz"
+            Unit
+        }
     }
 })

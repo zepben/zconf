@@ -1,6 +1,8 @@
 package com.zepben.zconf.model
 
 import kotlinx.serialization.json.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 sealed class ConfigElement {
     protected fun parsePath(path: String): Pair<String, String> {
@@ -89,7 +91,7 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
-        require(index != null) { "Array node present but next path item is not index" }
+        validateIndex(index)
 
          return when (val node = contents.getOrNull(index)) {
              is ConfigArray -> node[rest]
@@ -103,7 +105,7 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
-        require(index != null) { "Array node index requested, but index is not integer" }
+        validateIndex(index)
 
         when (val element = contents.getOrNull(index)) {
             is ConfigArray -> element[rest] = value
@@ -115,6 +117,16 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
 
             null -> handleNullSet(rest, index, value)
         }
+    }
+
+    @OptIn(ExperimentalContracts::class)
+    private fun validateIndex(index: Int?) {
+        contract {
+            returns() implies (index != null)
+        }
+
+        require(index != null) { "Array node present but next path item is not index" }
+        require(index >= 0) { "Array node must not index negative"}
     }
 
     private fun handleNullSet(rest: String, index: Int, value: String?) {
