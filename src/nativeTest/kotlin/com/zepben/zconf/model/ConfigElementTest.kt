@@ -11,7 +11,7 @@ class ConfigModelTest : FunSpec({
         root = ConfigObject()
     }
 
-    test("fetching non existent element returns null") {
+    test("returns null for nonexistent keys") {
         root["foo"] shouldBe null
         root["0"] shouldBe null
         root["foo.0"] shouldBe null
@@ -44,7 +44,7 @@ class ConfigModelTest : FunSpec({
         root["auth.other.0.key"] shouldBe  ConfigValue("value")
     }
 
-    test("exceptions when setting nested value when value exists") {
+    test("throws when setting causes structure change") {
         root["foo"] = "bar"
 
         shouldThrow<IllegalArgumentException> {
@@ -58,10 +58,69 @@ class ConfigModelTest : FunSpec({
         }
     }
 
-    test("invalid array indexes") {
+    test("throws for invalid array indexes") {
         shouldThrow<IllegalArgumentException> {
             root["foo.-1"] = "baz"
             Unit
+        }
+    }
+
+    context("merging two configs") {
+        test("merges like structures") {
+            root["foo"] = "bar"
+            root["auth.type"] = "test1"
+            root["thing.0"] = "value2"
+
+            val otherRoot = ConfigObject()
+            otherRoot["foo"] = "baz"
+            otherRoot["auth.type"] = "test2"
+            otherRoot["thing.0"] = "value2"
+
+            root.merge(otherRoot)
+
+            root["foo"] shouldBe ConfigValue("baz")
+            root["auth.type"] shouldBe ConfigValue("test2")
+            root["thing.0"] shouldBe ConfigValue("value2")
+        }
+
+        test("merges other with less keys") {
+            root["foo"] = "bar"
+            root["auth.type"] = "test"
+
+            val otherRoot = ConfigObject()
+            otherRoot["auth.type"] = "test2"
+
+            root.merge(otherRoot)
+
+            root["foo"] shouldBe ConfigValue("bar")
+            root["auth.type"] shouldBe ConfigValue("test2")
+        }
+
+        test("merges other with more keys") {
+            root["foo"] = "bar"
+            root["auth.type"] = "test"
+
+            val otherRoot = ConfigObject()
+            otherRoot["auth.type"] = "test2"
+            otherRoot["auth.other"] = "value"
+
+            root.merge(otherRoot)
+
+            root["foo"] shouldBe ConfigValue("bar")
+            root["auth.type"] shouldBe ConfigValue("test2")
+            root["auth.other"] shouldBe ConfigValue("value")
+        }
+
+        test("does not merge other with different type") {
+            root["foo"] = "bar"
+
+            val otherRoot = ConfigObject()
+            otherRoot["foo.type"] = "test2"
+
+            shouldThrow<IllegalStateException> {
+                root.merge(otherRoot)
+                Unit
+            }
         }
     }
 })

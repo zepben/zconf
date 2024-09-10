@@ -26,6 +26,7 @@ sealed class ConfigElement {
         val subIndex = subKey.toIntOrNull()
 
         val newElement = if (subIndex != null) {
+            validateIndex(subIndex)
             // if the next key isn't parsable as an int, then its an array
             ConfigArray().apply {
                 this[rest] = value
@@ -37,9 +38,20 @@ sealed class ConfigElement {
         }
         return newElement
     }
+
+    abstract fun merge(other: ConfigElement?)
 }
 
-data class ConfigValue(var value: String?): ConfigElement()
+data class ConfigValue(var value: String?): ConfigElement() {
+
+    override fun merge(other: ConfigElement?) {
+        when (other) {
+            is ConfigValue -> value = other.value
+            null -> return
+            else -> throw IllegalStateException("Cannot merge with unlike type")
+        }
+    }
+}
 
 class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()): ConfigElement() {
 
@@ -82,10 +94,32 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
             contents[key] = newElement
         }
     }
+
+    override fun merge(other: ConfigElement?) {
+        when (other) {
+            is ConfigObject -> {
+                val allKeys = contents.keys + other.contents.keys
+                allKeys.forEach { key ->
+                    val currentValue = contents[key]
+                    val otherValue = other.contents[key]
+
+                    if(currentValue != null && otherValue != null) {
+                        currentValue.merge(otherValue)
+                    } else if (currentValue != null) {
+                        return@forEach
+                    } else if (otherValue != null) {
+                        contents[key] = otherValue
+                    }
+                }
+            }
+            null -> return
+            else -> throw IllegalStateException("Cannot merge with unlike type")
+        }
+    }
 }
 
-class ConfigArray(private val contents: MutableList<ConfigElement> = mutableListOf()): ConfigElement() {
-    fun contents() = contents.toList()
+class ConfigArray(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()): ConfigElement() {
+    fun contents() = contents.values.toList()
 
     operator fun get(path: String): ConfigElement? {
         val (key, rest) = parsePath(path)
@@ -93,7 +127,7 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
 
         validateIndex(index)
 
-         return when (val node = contents.getOrNull(index)) {
+         return when (val node = contents[index.toString()]) {
              is ConfigArray -> node[rest]
              is ConfigObject -> node[rest]
              is ConfigValue -> node
@@ -107,7 +141,7 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
 
         validateIndex(index)
 
-        when (val element = contents.getOrNull(index)) {
+        when (val element = contents[index.toString()]) {
             is ConfigArray -> element[rest] = value
             is ConfigObject -> element[rest] = value
             is ConfigValue -> {
@@ -119,24 +153,47 @@ class ConfigArray(private val contents: MutableList<ConfigElement> = mutableList
         }
     }
 
-    @OptIn(ExperimentalContracts::class)
-    private fun validateIndex(index: Int?) {
-        contract {
-            returns() implies (index != null)
-        }
 
-        require(index != null) { "Array node present but next path item is not index" }
-        require(index >= 0) { "Array node must not index negative"}
+    override fun merge(other: ConfigElement?) {
+        when (other) {
+            is ConfigArray -> {
+                val allKeys = contents.keys + other.contents.keys
+                allKeys.forEach { key ->
+                    val currentValue = contents[key]
+                    val otherValue = other.contents[key]
+
+                    if(currentValue != null && otherValue != null) {
+                        currentValue.merge(otherValue)
+                    } else if (currentValue != null) {
+                        return@forEach
+                    } else if (otherValue != null) {
+                        contents[key] = otherValue
+                    }
+                }
+            }
+            null -> return
+            else -> throw IllegalStateException("Cannot merge with unlike type")
+        }
     }
 
     private fun handleNullSet(rest: String, index: Int, value: String?) {
         if (rest.isEmpty()) {
             // if rest is empty we are ready to set a value
-            contents.add(ConfigValue(value))
+            contents[index.toString()] = ConfigValue(value)
         } else {
             val newElement = createArrayOrObject(rest, value)
 
-            contents.add(newElement)
+            contents[index.toString()] = newElement
         }
     }
+}
+
+@OptIn(ExperimentalContracts::class)
+private fun validateIndex(index: Int?) {
+    contract {
+        returns() implies (index != null)
+    }
+
+    require(index != null) { "Array node present but next path item is not index" }
+    require(index >= 0) { "Array node must not index negative"}
 }

@@ -18,7 +18,7 @@ class Generate: CliktCommand() {
 
         val resolvedConfig = mutableMapOf<String, String>().apply {
             parsedSources.map { it.first.sourceProcessor.invoke(it.second) }.forEach {
-                this.putAll(it.properties)
+//                this.putAll(it.properties)
             }
         }
 
