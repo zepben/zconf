@@ -5,6 +5,8 @@ import com.zepben.zconf.sources.EnvBlobSourceProcessor
 import com.zepben.zconf.sources.NullSourceProcessor
 import com.zepben.zconf.sources.SourceProcessor
 
+data class SourceTypeParseResult(val type: SourceType, val param: String)
+
 enum class SourceType(val protocol: String, val sourceProcessor: (String) -> SourceProcessor) {
     NULL("null", ::NullSourceProcessor),
     ENV_BLOB_GZ("env-blob-gz", ::EnvBlobGzSourceProcessor),
@@ -13,13 +15,14 @@ enum class SourceType(val protocol: String, val sourceProcessor: (String) -> Sou
     companion object  {
         private const val PROTOCOL_SEPARATOR = "://"
 
-        fun parse(input: String): Pair<SourceType, String> {
+        fun parse(input: String): SourceTypeParseResult {
             val type = entries
                 .toTypedArray()
                 .firstOrNull { input.startsWith(it.protocol) } ?: NULL
+
             val arg = input.split(PROTOCOL_SEPARATOR).getOrNull(1) ?: ""
 
-            return Pair(type, arg)
+            return SourceTypeParseResult(type, arg)
         }
     }
 }
