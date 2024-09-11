@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.kotlinxSerializationJson)
             implementation(libs.kotlinxIoCore)
             implementation(libs.clikt)
+            implementation(libs.kotlinLogger)
         }
 
         nativeTest.dependencies {

@@ -4,6 +4,7 @@ import com.zepben.zconf.model.ConfigArray
 import com.zepben.zconf.model.ConfigElement
 import com.zepben.zconf.model.ConfigObject
 import com.zepben.zconf.model.ConfigValue
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import kotlinx.serialization.json.*
@@ -15,6 +16,8 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
     input: String,
     private val envFetcher: (String) -> String? = { env -> getenv(env)?.toKString() }
 ): SourceProcessor(input) {
+    private val logger = KotlinLogging.logger {}
+
     @OptIn(ExperimentalEncodingApi::class)
     override fun execute(): ConfigElement {
         val envValue = envFetcher(input) ?: return ConfigObject()
@@ -23,6 +26,7 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
             val decodedValue = Base64.Default.decode(envValue)
             Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
         } catch (e: Exception) {
+            logger.error(e) { "Failed to decode/decompress JSON in Env $input.. skipping.."}
             return ConfigObject()
         }
 
