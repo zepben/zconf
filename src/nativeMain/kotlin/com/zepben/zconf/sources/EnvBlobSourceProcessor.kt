@@ -11,12 +11,21 @@ import platform.posix.getenv
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-open class EnvBlobSourceProcessor(input: String): SourceProcessor(input) {
-    @OptIn(ExperimentalForeignApi::class, ExperimentalEncodingApi::class)
+open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) constructor(
+    input: String,
+    private val envFetcher: (String) -> String? = { env -> getenv(env)?.toKString() }
+): SourceProcessor(input) {
+    @OptIn(ExperimentalEncodingApi::class)
     override fun execute(): ConfigElement {
-        val envValue = getenv(input)?.toKString() ?: return ConfigObject()
-        val decodedValue = Base64.Default.decode(envValue)
-        val json = Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
+        val envValue = envFetcher(input) ?: return ConfigObject()
+
+        val json = try {
+            val decodedValue = Base64.Default.decode(envValue)
+            Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
+        } catch (e: Exception) {
+            return ConfigObject()
+        }
+
         return convertToIntermediateForm(json)
     }
 

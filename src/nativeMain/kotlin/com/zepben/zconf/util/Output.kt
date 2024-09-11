@@ -12,7 +12,7 @@ class OutputWriter {
 
     fun write(outputPath: String, contents: JsonElement) {
         val path = Path(outputPath)
-        
+
         SystemFileSystem.sink(path).use {
             val serialJson = json.encodeToString(contents)
             val buffer = Buffer().apply {
