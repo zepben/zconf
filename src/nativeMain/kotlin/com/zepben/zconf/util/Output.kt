@@ -10,8 +10,10 @@ import kotlinx.serialization.json.JsonElement
 class OutputWriter {
     private val json = Json { prettyPrint = true }
 
-    fun write(path: String, contents: JsonElement) {
-        SystemFileSystem.sink(Path(path)).use {
+    fun write(outputPath: String, contents: JsonElement) {
+        val path = Path(outputPath)
+        
+        SystemFileSystem.sink(path).use {
             val serialJson = json.encodeToString(contents)
             val buffer = Buffer().apply {
                 write(serialJson.encodeToByteArray())
