@@ -16,13 +16,13 @@ class Main: CliktCommand(name = "zconf") {
     }
 }
 
-//fun main(args: Array<String>) = Main().subcommands(Version(), Generate()).main(args)
+fun main(args: Array<String>) = Main().subcommands(Version(), Generate()).main(args)
 
-@OptIn(ExperimentalEncodingApi::class, ExperimentalForeignApi::class)
-fun main(args: Array<String>) {
-    val test = getenv("TEST_ENV")!!.toKString()
-    println("test")
-    println(test)
-    println("after")
-    println( EnvBlobSourceProcessor("TEST_ENV").properties)
-}
+//@OptIn(ExperimentalEncodingApi::class, ExperimentalForeignApi::class)
+//fun main(args: Array<String>) {
+//    val test = getenv("TEST_ENV")!!.toKString()
+//    println("test")
+//    println(test)
+//    println("after")
+//    println( EnvBlobSourceProcessor("TEST_ENV").properties)
+//}
