@@ -5,6 +5,8 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.validate
+import com.zepben.zconf.model.ConfigObject
+import com.zepben.zconf.util.OutputWriter
 import kotlinx.serialization.json.*
 
 class Generate: CliktCommand() {
@@ -14,16 +16,12 @@ class Generate: CliktCommand() {
     private val outputPath by option("-o", "--output").required()
 
     override fun run() {
-        val parsedSources = sources.map { SourceType.parse(it) }
+        val config = ConfigObject()
 
-        val resolvedConfig = mutableMapOf<String, String>().apply {
-            parsedSources.map { it.first.sourceProcessor.invoke(it.second) }.forEach {
-//                this.putAll(it.properties)
-            }
-        }
+        sources.map { SourceType.parse(it) }
+            .map { it.first.sourceProcessor.invoke(it.second) }
+            .forEach { config.merge(it.properties) }
 
-//        convertToJsonElement(resolvedConfig)
-
-//        writeOutput(resolvedConfig)
+        OutputWriter().write(outputPath, config.toJson())
     }
 }
