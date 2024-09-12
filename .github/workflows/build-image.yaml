@@ -8,6 +8,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container: zepben/pipeline-basic:5.0.0
     permissions:
       contents: read
       packages: write
