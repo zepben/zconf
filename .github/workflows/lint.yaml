@@ -1,0 +1,23 @@
+name: Lint and other things
+on:
+  push:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: zepben/pipeline-basic:5.0.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache licence-check
+        uses: actions/cache@v3
+        with:
+          path: /lc
+          key: lcc
+
+      - name: Check licence
+        uses: zepben/licence-check-action@main
+        with:
+          LC_URL: ${{ secrets.LC_URL }}
+          PATH: "src"
