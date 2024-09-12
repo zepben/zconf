@@ -6,6 +6,7 @@
 package com.zepben.zconf
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
@@ -16,6 +17,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import platform.posix.exit
 
 class Generate: CliktCommand() {
+    init {
+        context {
+            autoEnvvarPrefix = "ZCONF"
+        }
+    }
 
     private val sources by option("-s", "--source").multiple().unique()
     private val outputPath by option("-o", "--output").required()

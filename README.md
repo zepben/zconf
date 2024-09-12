@@ -15,8 +15,8 @@ zconf.kexe generate --source "env-blob://TEST_ENV" --output ./config.json
 
 The generate command will take one or more sources and generate an output file.
 
-- `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source.
-- `--output` - Absolute path to file the final config JSON will be written. Full path must exist.
+- `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source. Also available as `ZCONF_SOURCE`
+- `--output` - Absolute path to file the final config JSON will be written. Full path must exist. Also available as `ZCONF_OUTPUT`
 
 #### Supported Source Types
 
