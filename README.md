@@ -1,22 +1,41 @@
-[![official JetBrains project](https://jb.gg/badges/official-plastic.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue.svg?style=flat&logo=kotlin)](https://kotlinlang.org)
+# Zconf
 
-# Kotlin/Native Template
+Zepben application configuration tool
 
-A mostly-empty template to get started creating a Kotlin/Native project. 
+## Usage
 
-## Getting Started
+### Generating a config
 
-1. On the project page, click on the `Use this template` button
-2. Click on the `Create a new repository` drop-down item
-3. Fill in the details of the new repository you'll be creating under your account
-4. Click the `Create repository` button
-5. Browse to your repository and make the needed changes there.
+```text
+zconf.kexe generate <--source "SOURCE"> <--output "OUTPUT">
 
-## Code of conduct
+# example
+zconf.kexe generate --source "env-blob://TEST_ENV" --output ./config.json
+```
 
-Please read [our code of conduct](https://github.com/jetbrains#code-of-conduct).
+The generate command will take one or more sources and generate an output file.
 
-## License
+- `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source.
+- `--output` - Absolute path to file the final config JSON will be written. Full path must exist.
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE.md](LICENSE.md) file for details
+#### Supported Source Types
+
+The follow are sources in the form of `source-type://params`
+
+- `env-blob://ENV` - Represents an environment variable (the param) which contains a Base64 encoded JSON
+- `env-blob-gz://ENV` - Represent an environment variable (the param) which contains a Gzip'd Base64 encoded JSON
+- `null://` - Represent a null source. No parameter. Used as fallback if the source is unparsable.
+
+## Development
+
+You can open this in Intellij as a `gradle` project or run the following in a Terminal
+
+```shell
+# Linux
+./gradlew build
+
+# Windows
+./gradlew.bat build
+```
+
+After this completes, you coulld find debug/test/release executable in the`build/bin/native` folder.
