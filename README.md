@@ -1,22 +1,79 @@
-[![official JetBrains project](https://jb.gg/badges/official-plastic.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue.svg?style=flat&logo=kotlin)](https://kotlinlang.org)
+# Zconf
 
-# Kotlin/Native Template
+Zepben application configuration tool
 
-A mostly-empty template to get started creating a Kotlin/Native project. 
+## Usage
 
-## Getting Started
+### Generating a config
 
-1. On the project page, click on the `Use this template` button
-2. Click on the `Create a new repository` drop-down item
-3. Fill in the details of the new repository you'll be creating under your account
-4. Click the `Create repository` button
-5. Browse to your repository and make the needed changes there.
+```text
+zconf.kexe generate <--source "SOURCE"> <--output "OUTPUT">
 
-## Code of conduct
+# example
+zconf.kexe generate --source "env-blob://TEST_ENV" --output ./config.json
+```
 
-Please read [our code of conduct](https://github.com/jetbrains#code-of-conduct).
+The generate command will take one or more sources and generate an output file.
 
-## License
+- `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source. Also available as `ZCONF_SOURCE`
+- `--output` - Absolute path to file the final config JSON will be written. Full path must exist. Also available as `ZCONF_OUTPUT`
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE.md](LICENSE.md) file for details
+#### Supported Source Types
+
+The follow are sources in the form of `source-type://params`
+
+- `env-blob://ENV` - Represents an environment variable (the param) which contains a Base64 encoded JSON
+- `env-blob-gz://ENV` - Represent an environment variable (the param) which contains a Gzip'd Base64 encoded JSON
+- `null://` - Represent a null source. No parameter. Used as fallback if the source is unparsable.
+
+## Development
+
+You can open this in Intellij as a `gradle` project or run the following in a Terminal
+
+```shell
+# Linux
+./gradlew build
+
+# Windows
+./gradlew.bat build
+```
+
+After this completes, you coulld find debug/test/release executable in the`build/bin/native` folder.
+
+## About
+
+### Motivation
+
+Zepben tools run in a variety of environments, from the local environment, containers, bare metal machines and more. Each of these runtimes have different preferred ways of being configured, with each configuration item having different secuirty requirements, ie. secrets. Additionally, the configuration required for these applications can be very complex and large and each application also seems to implement its configuration in different ways. Finally, applications that are part of the platform can be written in any language, which makes it difficult to simply have a Zepben configuration library.
+
+Given the many problems, it was decided that we would require that all applications implement their config as single JSON file (this JSON file may reference other JSON files). Then it would be up to an external tool (Zconf!) to somehow derive the JSON file from any platform specific storage.
+
+### Architecture
+
+Zconf's role is to unite configuration stored in multiple sources, merge them together and emit them as a single config document (JSON). Therefore it is broken down into those three distinct stages
+
+#### Sources
+
+Zconfig can take one more sources, known as a `SourceType`. Each source has a processor that allows zconf to take the parameters provided that source and extract all of the configuration values. Each processor creates an intermediate representation of the config for that source. Supporting more config sources is as simple as adding a new source type and a corresponding processor.
+
+#### Intermediate Representation
+
+The intermediate representation is a recursive data structure that can be indexed using a language that is similar to JSON path. There are three elements
+
+- `ConfigObject` - similar to a JSON object, a map of configuration
+- `ConfigArray` - similar to a JSON array, implemented as a ConfigObject with numerical keys
+- `ConfigValue` - similar to a JSON primitive, a leaf node in the structure. Contains a string or null
+
+Given a root config, we are able to index through it:
+
+```kotlin
+val root = ConfigObject()
+
+root["foo.bar.0"] = "1" // Json document is now { "foo" : { "bar": ["1"] }}
+```
+
+Once all sources are in this intermediate form, it is trivial to merge configuration values together.
+
+#### Output
+
+The intermediate representation can be converted into KotlinX JSON and written to a file. More storage formats can be supported in the future if required.

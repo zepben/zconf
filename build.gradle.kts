@@ -1,6 +1,12 @@
+/*
+ * Copyright (c) Zeppelin Bend Pty Ltd (Zepben) 2024 - All Rights Reserved.
+ * Unauthorized use, copy, or distribution of this file or its contents, via any medium is strictly prohibited.
+ */
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.koTest)
 }
 
 group = "com.zepben.zconf"
@@ -8,6 +14,11 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+        name = "MavenCentralSnapshots"
+        mavenContent { snapshotsOnly() }
+    }
 }
 
 kotlin {
@@ -34,7 +45,13 @@ kotlin {
     sourceSets {
         nativeMain.dependencies {
             implementation(libs.kotlinxSerializationJson)
+            implementation(libs.kotlinxIoCore)
             implementation(libs.clikt)
+            implementation(libs.kotlinLogger)
+        }
+
+        nativeTest.dependencies {
+            implementation(libs.koTestFramework)
         }
     }
 }
