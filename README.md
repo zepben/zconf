@@ -39,3 +39,41 @@ You can open this in Intellij as a `gradle` project or run the following in a Te
 ```
 
 After this completes, you coulld find debug/test/release executable in the`build/bin/native` folder.
+
+## About
+
+### Motivation
+
+Zepben tools run in a variety of environments, from the local environment, containers, bare metal machines and more. Each of these runtimes have different preferred ways of being configured, with each configuration item having different secuirty requirements, ie. secrets. Additionally, the configuration required for these applications can be very complex and large and each application also seems to implement its configuration in different ways. Finally, applications that are part of the platform can be written in any language, which makes it difficult to simply have a Zepben configuration library.
+
+Given the many problems, it was decided that we would require that all applications implement their config as single JSON file (this JSON file may reference other JSON files). Then it would be up to an external tool (Zconf!) to somehow derive the JSON file from any platform specific storage.
+
+### Architecture
+
+Zconf's role is to unite configuration stored in multiple sources, merge them together and emit them as a single config document (JSON). Therefore it is broken down into those three distinct stages
+
+#### Sources
+
+Zconfig can take one more sources, known as a `SourceType`. Each source has a processor that allows zconf to take the parameters provided that source and extract all of the configuration values. Each processor creates an intermediate representation of the config for that source. Supporting more config sources is as simple as adding a new source type and a corresponding processor.
+
+#### Intermediate Representation
+
+The intermediate representation is a recursive data structure that can be indexed using a language that is similar to JSON path. There are three elements
+
+- `ConfigObject` - similar to a JSON object, a map of configuration
+- `ConfigArray` - similar to a JSON array, implemented as a ConfigObject with numerical keys
+- `ConfigValue` - similar to a JSON primitive, a leaf node in the structure. Contains a string or null
+
+Given a root config, we are able to index through it:
+
+```kotlin
+val root = ConfigObject()
+
+root["foo.bar.0"] = "1" // Json document is now { "foo" : { "bar": ["1"] }}
+```
+
+Once all sources are in this intermediate form, it is trivial to merge configuration values together.
+
+#### Output
+
+The intermediate representation can be converted into KotlinX JSON and written to a file. More storage formats can be supported in the future if required.
