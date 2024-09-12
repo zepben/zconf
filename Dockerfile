@@ -17,6 +17,11 @@ RUN ./gradlew linkReleaseExecutableNative
 FROM scratch
 
 COPY --from=build /app/build/bin/native/releaseExecutable/zconf.kexe /zconf
+
+# Hack: Unfortunately Kotlin Native doesn't easily support static linking of the executable just yet. Until we do
+# we need to copy any dynamic libraries. Thankfully, what we need seems to be present in our runtime images
+#
+# See https://dev.to/mreichelt/christmas-hacking-squeezing-kotlin-native-into-docker-6ao
 COPY --from=build /lib /lib
 COPY --from=build /lib64 /lib64
 
