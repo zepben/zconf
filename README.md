@@ -4,7 +4,7 @@ Zepben application configuration tool
 
 ## Usage
 
-### Generating a config
+### CLI
 
 ```text
 zconf.kexe generate <--source "SOURCE"> <--output "OUTPUT">
@@ -17,6 +17,20 @@ The generate command will take one or more sources and generate an output file.
 
 - `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source. Also available as `ZCONF_SOURCE`
 - `--output` - Absolute path to file the final config JSON will be written. Full path must exist. Also available as `ZCONF_OUTPUT`
+
+### Integrating with Docker images
+
+In order to integrate with the Docker container of a downstream Zepben application, reference the Zconf container in a multi stage build and copy the executable across.
+
+```dockerfile
+# Reference the images
+FROM ghcr.io/zepben/conf:latest AS zconf
+
+# In the final image, copy the executable accross
+COPY --from=zconf /zconf /bin/zconf
+```
+
+Once the executable is present, you can call it in the `entrypoint.sh` script to generate the configuration and output it to the appropriate directory for your application.
 
 #### Supported Source Types
 
