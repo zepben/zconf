@@ -31,8 +31,6 @@ class Generate: CliktCommand() {
     override fun run() {
         val config = ConfigObject()
 
-        println(sources)
-
         if (sources.isEmpty()) {
             logger.error { "No sources specified, exiting" }
             exit(1)

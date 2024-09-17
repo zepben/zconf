@@ -8,6 +8,9 @@ package com.zepben.zconf.model
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class ConfigModelTest : FunSpec({
     var root = ConfigObject()
@@ -128,4 +131,20 @@ class ConfigModelTest : FunSpec({
             }
         }
     }
+
+    test("kotlinX supports parsing its output to the correct type") {
+        root["foo"] = "1"
+        root["bar"] = "2"
+        root["thing.0"] = "3"
+        root["thing.1"] = "4"
+        root["bool"] = "true"
+
+        val config = Json.encodeToString(root.toJson())
+        val parsedConfig = Json.decodeFromString<TestElement>(config)
+
+        parsedConfig shouldBe TestElement("1", 2, listOf(3, 4), true)
+    }
 })
+
+@Serializable
+private data class TestElement(val foo: String, val bar: Int, val thing: List<Int>, val bool: Boolean)

@@ -31,7 +31,7 @@ class SourceTypeTest : FunSpec({
     }
 
     test("falls back to null if unknown") {
-        val type = SourceType.parse("null://ENV")
+        val type = SourceType.parse("fake://ENV")
 
         type.type shouldBe SourceType.NULL
         type.param shouldBe "ENV"
