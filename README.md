@@ -15,8 +15,9 @@ zconf.kexe generate --source "env-blob://TEST_ENV" --output ./config.json
 
 The generate command will take one or more sources and generate an output file.
 
-- `--source` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source. Also available as `ZCONF_SOURCE`
-- `--output` - Absolute path to file the final config JSON will be written. Full path must exist. Also available as `ZCONF_OUTPUT`
+- `--source <source>` - A source string in the form of `source-type://params`. See [supported source types](#supported-source-types). Can be repeated more than once, subsequent uses will override the first config source.
+- `--source-env <env>` - The name of the environment variable that contains a comma seprate list of sources.
+- `--output <path/to/file>` - Absolute path to file the final config JSON will be written. Full path must exist.
 
 ### Integrating with Docker images
 
@@ -25,6 +26,13 @@ In order to integrate with the Docker container of a downstream Zepben applicati
 ```dockerfile
 # Reference the images
 FROM ghcr.io/zepben/conf:latest AS zconf
+
+# Final dockerfile
+FROM docker.io/library/amazoncorretto:11-al2023
+
+# Required dependency in Amazon Linux 2023
+RUN yum update && yum install -y libxcrypt-compat
+
 
 # In the final image, copy the executable accross
 COPY --from=zconf /zconf /bin/zconf

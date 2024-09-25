@@ -14,7 +14,10 @@ import com.github.ajalt.clikt.parameters.options.unique
 import com.zepben.zconf.model.ConfigObject
 import com.zepben.zconf.util.OutputWriter
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.toKString
 import platform.posix.exit
+import platform.posix.getenv
 
 class Generate: CliktCommand() {
     init {
@@ -23,22 +26,24 @@ class Generate: CliktCommand() {
         }
     }
 
+    private val sourceEnv by option("--source-env")
     private val sources by option("-s", "--source").multiple().unique()
     private val outputPath by option("-o", "--output").required()
 
     private val logger = KotlinLogging.logger {}
 
+    @OptIn(ExperimentalForeignApi::class)
     override fun run() {
         val config = ConfigObject()
 
-        println(sources)
+        val resolvedSources = getenv(sourceEnv)?.toKString()?.split(",") ?: sources
 
-        if (sources.isEmpty()) {
+        if (resolvedSources.isEmpty()) {
             logger.error { "No sources specified, exiting" }
             exit(1)
         }
 
-        sources.map { SourceType.parse(it) }
+        resolvedSources.map { SourceType.parse(it) }
             .map { it.type.sourceProcessor.invoke(it.param) }
             .forEach { config.merge(it.properties) }
 
