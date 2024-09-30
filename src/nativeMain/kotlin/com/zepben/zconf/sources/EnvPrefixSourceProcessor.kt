@@ -7,7 +7,9 @@ package com.zepben.zconf.sources
 
 import com.zepben.zconf.model.ConfigElement
 import com.zepben.zconf.model.ConfigObject
-import kotlinx.cinterop.*
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.get
+import kotlinx.cinterop.toKString
 import platform.posix.NULL
 import platform.posix.__environ
 
