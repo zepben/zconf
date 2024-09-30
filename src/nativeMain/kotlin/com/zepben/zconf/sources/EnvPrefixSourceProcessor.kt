@@ -19,9 +19,7 @@ class EnvPrefixSourceProcessor(
 ) : SourceProcessor(input) {
 
     companion object {
-        fun getAllEnvsForPrefix(prefix: String): Map<String, String> {
-            val envs = getAllEnvs()
-
+        fun getAllEnvsForPrefix(prefix: String, envs: List<String> = getAllEnvs()): Map<String, String> {
             return envs.map { it.split("=") }
                 .associate {
                     // preserve any envs with an equal sign in it
