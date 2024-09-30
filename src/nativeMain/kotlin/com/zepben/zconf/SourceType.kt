@@ -5,10 +5,7 @@
 
 package com.zepben.zconf
 
-import com.zepben.zconf.sources.EnvBlobGzSourceProcessor
-import com.zepben.zconf.sources.EnvBlobSourceProcessor
-import com.zepben.zconf.sources.NullSourceProcessor
-import com.zepben.zconf.sources.SourceProcessor
+import com.zepben.zconf.sources.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 data class SourceTypeParseResult(val type: SourceType, val param: String)
@@ -16,7 +13,8 @@ data class SourceTypeParseResult(val type: SourceType, val param: String)
 enum class SourceType(val protocol: String, val sourceProcessor: (String) -> SourceProcessor) {
     NULL("null", ::NullSourceProcessor),
     ENV_BLOB_GZ("env-blob-gz", ::EnvBlobGzSourceProcessor),
-    ENV_BLOB("env-blob", ::EnvBlobSourceProcessor);
+    ENV_BLOB("env-blob", ::EnvBlobSourceProcessor),
+    ENV_PREFIX("env-prefix", ::EnvPrefixSourceProcessor);
 
     companion object  {
         private const val PROTOCOL_SEPARATOR = "://"
