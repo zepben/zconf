@@ -7,10 +7,7 @@ package com.zepben.zconf
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
-import com.github.ajalt.clikt.parameters.options.multiple
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
-import com.github.ajalt.clikt.parameters.options.unique
+import com.github.ajalt.clikt.parameters.options.*
 import com.zepben.zconf.model.ConfigObject
 import com.zepben.zconf.util.OutputWriter
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -26,7 +23,7 @@ class Generate: CliktCommand() {
         }
     }
 
-    private val sourceEnv by option("--source-env")
+    private val sourceEnv by option("--source-env").default("")
     private val sources by option("-s", "--source").multiple().unique()
     private val outputPath by option("-o", "--output").required()
 
@@ -35,7 +32,6 @@ class Generate: CliktCommand() {
     @OptIn(ExperimentalForeignApi::class)
     override fun run() {
         val config = ConfigObject()
-
         val resolvedSources = getenv(sourceEnv)?.toKString()?.split(",") ?: sources
 
         if (resolvedSources.isEmpty()) {

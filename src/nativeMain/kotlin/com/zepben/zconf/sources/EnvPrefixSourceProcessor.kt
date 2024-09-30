@@ -23,7 +23,6 @@ class EnvPrefixSourceProcessor(
             val envs = getAllEnvs()
 
             return envs.map { it.split("=") }
-                .onEach { require(it.count() == 2) }
                 .associate {
                     // preserve any envs with an equal sign in it
                     it[0] to it.subList(1, it.size).joinToString("=")
@@ -54,8 +53,8 @@ class EnvPrefixSourceProcessor(
         val envs = envsFetcher(input)
 
         envs.forEach { (key , value) ->
-            val resolvedKey = key.removePrefix(input)
-                .replace("__", "$") // replace any escaped underscores
+            val resolvedKey = key.removePrefix("${input}__")
+                .replace("__", "$") // escape double underscores
                 .replace("_", ".") // replace underscores for dots
                 .replace("$", "_") // put the escaped underscores back
                 .lowercase()
