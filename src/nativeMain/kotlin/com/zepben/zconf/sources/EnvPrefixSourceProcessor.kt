@@ -26,7 +26,7 @@ class EnvPrefixSourceProcessor(
                     it[0] to it.subList(1, it.size).joinToString("=")
                 }
                 .filter { (k, _) ->
-                    k.startsWith(prefix)
+                    k.startsWith("${prefix}__")
                 }
         }
 
@@ -55,7 +55,6 @@ class EnvPrefixSourceProcessor(
                 .replace("__", "$") // escape double underscores
                 .replace("_", ".") // replace underscores for dots
                 .replace("$", "_") // put the escaped underscores back
-                .lowercase()
 
             config[resolvedKey] = value
         }

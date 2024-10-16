@@ -46,7 +46,7 @@ The follow are sources in the form of `source-type://params`
 
 - `env-blob://ENV` - Represents an environment variable (the param) which contains a Base64 encoded JSON
 - `env-blob-gz://ENV` - Represent an environment variable (the param) which contains a Gzip'd Base64 encoded JSON
-- `env-prefix://PREFIX` - Fetches all environment variables that start with a prefix (the param). The prefix must be followed by two underscores. Any config key that has an underscore can be separated by double underscores. For example: "PREFIX__AUTH_CLIENT__SECRET=123" whould become "auth.client_secret=123".
+- `env-prefix://PREFIX` - Fetches all environment variables that start with a prefix (the param). The prefix must be followed by two underscores. Any config key that has an underscore can be separated by double underscores. For example: "PREFIX__auth_client__secret=123" whould become "auth.client_secret=123", while  "PREFIX__auth_clientSecret=123" whould become "auth.clientSecret=123". Any casing after the prefix is preserved.
 - `null://` - Represent a null source. No parameter. Used as fallback if the source is unparsable.
 
 ## Development

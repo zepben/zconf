@@ -17,11 +17,12 @@ class EnvPrefixSourceProcessorTest : FunSpec({
         val inputPrefix = "PREFIX"
         val fakeEnvFetcher = { input: String ->
             EnvPrefixSourceProcessor.getAllEnvsForPrefix(input, listOf(
-                "PREFIX__FOO_BAR=1",
-                "PREFIX__FOO_BAZ=2",
-                "PREFIX__THING_0=1",
-                "PREFIX__HAS__UNDERSCORE=10",
-                "OTHER__PREFIX_THING=1",
+                "PREFIX__foo_bar=1",
+                "PREFIX__foo_baz=2",
+                "PREFIX__thing_0=1",
+                "PREFIX__has__underscore=10",
+                "PREFIX__auth_camelCase=value",
+                "OTHER__prefix_thing=1",
                 "EXCLUDED=ENV"
             ))
         }
@@ -33,6 +34,7 @@ class EnvPrefixSourceProcessorTest : FunSpec({
             config["foo.baz"] shouldBe ConfigValue("2")
             config["thing.0"] shouldBe ConfigValue("1")
             config["has_underscore"] shouldBe ConfigValue("10")
+            config["auth.camelCase"] shouldBe ConfigValue("value")
 
 
             config["excluded"] shouldBe null
@@ -50,6 +52,7 @@ class EnvPrefixSourceProcessorTest : FunSpec({
             config["thing.0"] shouldBe null
             config["has_underscore"] shouldBe null
             config["excluded"] shouldBe null
+            config["auth.camelCase"] shouldBe null
         }
     }
 })
