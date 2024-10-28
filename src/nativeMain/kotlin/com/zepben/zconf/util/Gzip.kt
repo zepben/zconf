@@ -5,6 +5,7 @@
 
 package com.zepben.zconf.util
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.*
 import kotlinx.io.Buffer
@@ -13,6 +14,8 @@ import platform.zlib.*
 
 class Gzip {
     companion object {
+        private val logger = KotlinLogging.logger {}
+
         private const val BUFFER_MAX = 1024
         @OptIn(ExperimentalForeignApi::class)
         fun decode(compressed: ByteArray): ByteArray {
@@ -20,14 +23,14 @@ class Gzip {
                 val stream = alloc<z_stream>()
 
                 if(inflateInit2(stream.ptr, 15 + 16) != Z_OK) {
-                    throw IllegalStateException("shit")
+                    throw IllegalStateException("Unable to initialize Zlib")
                 }
 
                 stream.next_in = compressed.usePinned { it.addressOf(0).reinterpret() }
                 stream.avail_in = compressed.size.toUInt()
 
                 var ret = Z_OK
-                val intermediate = ByteArray(BUFFER_MAX)
+                var intermediate = ByteArray(BUFFER_MAX)
                 val output = Buffer()
 
                 do {
@@ -37,7 +40,12 @@ class Gzip {
                     ret = inflate(stream.ptr, Z_FINISH)
 
                     output.write(intermediate)
-                } while (ret == Z_OK)
+                    intermediate = ByteArray(BUFFER_MAX)
+                } while (ret == Z_BUF_ERROR)
+
+                if (ret < 0) {
+                    logger.error { "Failed to decompress, inflate returned $ret" }
+                }
 
                 inflateEnd(stream.ptr)
 
