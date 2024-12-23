@@ -18,7 +18,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) constructor(
     input: String,
     private val envFetcher: (String) -> String? = { env -> getenv(env)?.toKString() }
-): SourceProcessor(input) {
+) : SourceProcessor(input) {
     private val logger = KotlinLogging.logger {}
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -29,7 +29,7 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
             val decodedValue = Base64.Default.decode(envValue)
             Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
         } catch (e: Exception) {
-            logger.error(e) { "Failed to decode/decompress JSON in Env $input.. skipping.."}
+            logger.error(e) { "Failed to decode/decompress JSON in Env $input.. skipping.." }
             return ConfigObject()
         }
 
@@ -54,7 +54,13 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
             is JsonNull -> return // We don't care about nulls
             is JsonPrimitive -> thing[path.removePrefix(".")] = json.content
             is JsonArray -> json.forEachIndexed { index, jsonElement -> convertToIntermediateForm(jsonElement, "$path.$index", thing) }
-            is JsonObject -> json.entries.forEach { (key, jsonElement) -> convertToIntermediateForm(jsonElement, "$path.$key", thing) }
+            is JsonObject -> json.entries.forEach { (key, jsonElement) ->
+                convertToIntermediateForm(
+                    jsonElement,
+                    "$path.${key.replace(".", "__")}", // NOTE: We do this key replacement of 'dots' with double underscores to be able to differentiate between nested objects and JSON object keys that contain 'dots' in them.
+                    thing
+                )
+            }
         }
     }
 }
