@@ -11,7 +11,6 @@ kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serializati
 kotlinxIoCore = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 koTestFramework = { module = "io.kotest:kotest-framework-engine", version.ref = "koTest" }
-koTestAssertion = { module = "io.kotest:kotest-assertions-core", version.ref = "koTest" }
 kotlinLogger = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogger" }
 
 [plugins]
