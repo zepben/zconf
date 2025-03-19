@@ -1,9 +1,9 @@
 [versions]
 kotlin = "2.1.10"
-kotlinxSerialization = "1.7.2"
+kotlinxSerialization = "1.8.0"
 kotlinxIo = "0.5.3"
 clikt = "4.2.2"
-koTest = "6.0.0.M1"
+koTest = "6.0.0.M2"
 kotlinLogger = "5.1.4"
 
 [libraries]
