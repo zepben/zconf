@@ -45,7 +45,7 @@ class EnvBlobGzSourceProcessorTest : FunSpec({
 
     test("parses a complex JSON var") {
         val envVal =
-            "H4sIAAAAAAAAA5WOzQqCQBSF9z7FMKsCM9q2NVrWA0QLHU85OH+oY5T47s3gJBVItDv3O/d+3D4ihEooS7ekd9lNvHCZXrgAjUfSZcLCw/0bNNpYM10FC28hHTsFRqb203PALWhCoxUTnFW+S2tkLdzGTrPFkk5bQ/xDejRQs1Zf/itMhW4w/6dvv5UhnV9HtNsklc1RK7RokgdMDpUwLddKF1gxkTWNl5X8Wq4kpK7vo82bhmh4AmM9ctWfAQAA"
+            "H4sIAAAAAAAAA5WOzQqCQBSF9z6FzKrAjLZtjZb1ANFCx1MOzh+OY5T47s3gJBVItDv3O/d+3D6KYyIgLdnGvctuYqXL5MI4SDKSLucWHu7foFba6ukqWFgL4dgpsHhqPz0H3IImNEpSzmjtu6xB3sJt7BRdLMm0NSQ/pEcNOWv15b/CjCuD+T99+60M6fw6It0mrW2BRqKFSR/QBWRKlVhLVWJFeW6Ml1XsWq0EhGruo82bhmiInkxEueagAQAA"
         val config = EnvBlobGzSourceProcessor("FAKE") { _ -> envVal }.properties as ConfigObject
 
         config["menu.id"] shouldBe ConfigValue("file")

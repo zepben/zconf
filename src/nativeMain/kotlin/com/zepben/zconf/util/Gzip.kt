@@ -49,7 +49,7 @@ class Gzip {
 
                 inflateEnd(stream.ptr)
 
-                return output.readByteArray()
+                return output.readByteArray(stream.total_out.toInt())
             }
         }
     }

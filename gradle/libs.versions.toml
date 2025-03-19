@@ -3,7 +3,7 @@ kotlin = "2.0.20"
 kotlinxSerialization = "1.7.2"
 kotlinxIo = "0.5.3"
 clikt = "4.2.2"
-koTest = "6.0.0-SNAPSHOT"
+koTest = "6.0.0.M1"
 kotlinLogger = "5.1.4"
 
 [libraries]
