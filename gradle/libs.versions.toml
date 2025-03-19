@@ -4,7 +4,7 @@ kotlinxSerialization = "1.8.0"
 kotlinxIo = "0.7.0"
 clikt = "4.4.0"
 koTest = "6.0.0.M2"
-kotlinLogger = "5.1.4"
+kotlinLogger = "7.0.5"
 
 [libraries]
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
