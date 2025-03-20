@@ -1,17 +1,16 @@
 [versions]
-kotlin = "2.0.20"
-kotlinxSerialization = "1.7.2"
-kotlinxIo = "0.5.3"
-clikt = "4.2.2"
-koTest = "6.0.0-SNAPSHOT"
-kotlinLogger = "5.1.4"
+kotlin = "2.1.10"
+kotlinxSerialization = "1.8.0"
+kotlinxIo = "0.7.0"
+clikt = "4.4.0"
+koTest = "6.0.0.M2"
+kotlinLogger = "7.0.5"
 
 [libraries]
 kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinxIoCore = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 koTestFramework = { module = "io.kotest:kotest-framework-engine", version.ref = "koTest" }
-koTestAssertion = { module = "io.kotest:kotest-assertions-core", version.ref = "koTest" }
 kotlinLogger = { module = "io.github.oshai:kotlin-logging", version.ref = "kotlinLogger" }
 
 [plugins]

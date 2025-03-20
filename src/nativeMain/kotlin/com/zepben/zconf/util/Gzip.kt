@@ -6,7 +6,6 @@
 package com.zepben.zconf.util
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.*
 import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
@@ -49,7 +48,7 @@ class Gzip {
 
                 inflateEnd(stream.ptr)
 
-                return output.readByteArray()
+                return output.readByteArray(stream.total_out.toInt())
             }
         }
     }
