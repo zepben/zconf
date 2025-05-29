@@ -108,11 +108,6 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
             contents[key] = ConfigValue(value)
         } else {
             val newElement = when (hint) {
-                is JsonArray -> {
-                    ConfigArray().apply {
-                        this[rest] = value
-                    }
-                }
                 is JsonObject -> {
                     ConfigObject().apply {
                         this[rest] = value

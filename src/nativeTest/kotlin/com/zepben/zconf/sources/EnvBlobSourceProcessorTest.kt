@@ -61,9 +61,9 @@ class EnvBlobSourceProcessorTest : FunSpec({
     }
 
     test("preserves json element when parsing") {
-        val envVal = "ewogICJpZCI6IDEsCiAgIm1hcHBpbmdzIjogewogICAgIjIzMCI6NDAwLAogICAgIjI0MCI6NDE1LAogICAgIjI1MCI6NDMzLAogICAgIjYzNTAiOjExMDAwLAogICAgIjY0MDAiOjExMDAwLAogICAgIjEyNzAwIjoyMjAwMCwKICAgICIxOTEwMCI6MzMwMDAKICB9Cn0="
+        val envVal = "ewogICJpZCI6IDEsCiAibGlzdCI6IFsyMDAsMzAwLDQwMCw1MDAsNjAwXSwKICAibWFwcGluZ3MiOiB7CiAgICAiMjMwIjo0MDAsCiAgICAiMjQwIjo0MTUsCiAgICAiMjUwIjo0MzMsCiAgICAiNjM1MCI6MTEwMDAsCiAgICAiNjQwMCI6MTEwMDAsCiAgICAiMTI3MDAiOjIyMDAwLAogICAgIjE5MTAwIjozMzAwMAogIH0KfQ=="
         val config = EnvBlobSourceProcessor("FAKE") { _ -> envVal }.properties as ConfigObject
 
-        Json.encodeToString(config.toJson()) shouldBe """{"id":"1","mappings":{"230":"400","240":"415","250":"433","6350":"11000","6400":"11000","12700":"22000","19100":"33000"}}"""
+        Json.encodeToString(config.toJson()) shouldBe """{"id":"1","list":["200","300","400","500","600"],"mappings":{"230":"400","240":"415","250":"433","6350":"11000","6400":"11000","12700":"22000","19100":"33000"}}"""
     }
 })
