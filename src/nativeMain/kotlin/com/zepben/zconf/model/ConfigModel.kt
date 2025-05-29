@@ -79,6 +79,10 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
     }
 
     operator fun set(path: String, value: String?) {
+        set(path, value, null)
+    }
+
+    fun set(path: String, value: String?, hint: JsonElement?) {
         val (key, rest) = parsePath(path)
 
         when (val element = contents[key]) {
@@ -90,18 +94,32 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
             }
 
             null -> {
-                handleNullSet(rest, key, value)
+                handleNullSet(rest, key, value, hint)
             }
         }
-
     }
 
-    private fun handleNullSet(rest: String, key: String, value: String?) {
+    private fun handleNullSet(rest: String, key: String, value: String?, hint: JsonElement?) {
         if (rest.isEmpty()) {
             // if rest is empty we are ready to set a value
             contents[key] = ConfigValue(value)
         } else {
-            val newElement = createArrayOrObject(rest, value)
+            val newElement = when (hint) {
+                is JsonArray -> {
+                    ConfigArray().apply {
+                        this[rest] = value
+                    }
+                }
+                is JsonObject -> {
+                    ConfigObject().apply {
+                        this[rest] = value
+                    }
+
+                }
+                else -> {
+                    null
+                }
+            } ?: createArrayOrObject(rest, value)
 
             contents[key] = newElement
         }
@@ -148,7 +166,7 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
         }
     }
 
-    operator fun set(path: String, value: String?) {
+     operator fun set(path: String, value: String?) {
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
@@ -165,7 +183,6 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
             null -> handleNullSet(rest, index, value)
         }
     }
-
 
     override fun merge(other: ConfigElement?) {
         when (other) {

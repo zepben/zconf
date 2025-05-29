@@ -49,16 +49,17 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
         return accumulator
     }
 
-    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: ConfigObject) {
+    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: ConfigObject, prevJson: JsonElement? = null) {
         when (json) {
             is JsonNull -> return // We don't care about nulls
-            is JsonPrimitive -> thing[path.removePrefix(".")] = json.content
-            is JsonArray -> json.forEachIndexed { index, jsonElement -> convertToIntermediateForm(jsonElement, "$path.$index", thing) }
+            is JsonPrimitive -> thing.set(path.removePrefix("."), json.content, prevJson)
+            is JsonArray -> json.forEachIndexed { index, jsonElement -> convertToIntermediateForm(jsonElement, "$path.$index", thing, json) }
             is JsonObject -> json.entries.forEach { (key, jsonElement) ->
                 convertToIntermediateForm(
                     jsonElement,
                     "$path.${key.replace(".", "__")}", // NOTE: We do this key replacement of 'dots' with double underscores to be able to differentiate between nested objects and JSON object keys that contain 'dots' in them.
-                    thing
+                    thing,
+                    json
                 )
             }
         }
