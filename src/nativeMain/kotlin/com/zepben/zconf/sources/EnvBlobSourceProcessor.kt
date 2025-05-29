@@ -8,8 +8,10 @@
 
 package com.zepben.zconf.sources
 
+import com.zepben.zconf.model.ConfigArray
 import com.zepben.zconf.model.ConfigElement
 import com.zepben.zconf.model.ConfigObject
+import com.zepben.zconf.model.CompositeConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
@@ -52,16 +54,26 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
         return accumulator
     }
 
-    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: ConfigObject) {
+    private fun convertToIntermediateForm(json: JsonElement, path: String, thing: CompositeConfig) {
         when (json) {
             is JsonNull -> return // We don't care about nulls
             is JsonPrimitive -> thing[path.removePrefix(".")] = json.content
-            is JsonArray -> json.forEachIndexed { index, jsonElement -> convertToIntermediateForm(jsonElement, "$path.$index", thing) }
-            is JsonObject -> json.entries.forEach { (key, jsonElement) ->
+            is JsonArray ->{
+                val arr = ConfigArray().apply { thing[path] = this } // Create the ConfigArray here and don't rely on the model doing it.
+                json.forEachIndexed { index, nextElement ->
+                    val (newPath, obj) = if(nextElement is JsonObject)
+                        "" to ConfigObject().apply { arr[index.toString()] = this } // If the nextElement is a JsonObject, we create a new ConfigObject and assign it to the array at the index.
+                    else
+                        index.toString() to arr
+
+                    convertToIntermediateForm(nextElement, newPath, obj)
+                }
+            }
+            is JsonObject -> json.entries.forEach { (key, nextElement) ->
                 convertToIntermediateForm(
-                    jsonElement,
-                    "$path.${key.replace(".", "__")}", // NOTE: We do this key replacement of 'dots' with double underscores to be able to differentiate between nested objects and JSON object keys that contain 'dots' in them.
-                    thing
+                    nextElement,
+                    key.replace(".", "__"), // NOTE: We do this key replacement of 'dots' with double underscores to be able to differentiate between nested objects and JSON object keys that contain 'dots' in them.
+                    if(nextElement is JsonObject) ConfigObject().apply { thing[key] = this } else thing // Create the ConfigObject here and don't rely on the model doing it.
                 )
             }
         }
