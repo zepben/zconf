@@ -56,6 +56,12 @@ sealed class ConfigElement {
     abstract fun merge(other: ConfigElement?)
 }
 
+interface CompositeConfig{
+    operator fun set(path: String, value: ConfigElement)
+    operator fun set(path: String, value: String?)
+    operator fun get(path: String): ConfigElement?
+}
+
 data class ConfigValue(var value: String?) : ConfigElement() {
 
     override fun merge(other: ConfigElement?) {
@@ -67,10 +73,10 @@ data class ConfigValue(var value: String?) : ConfigElement() {
     }
 }
 
-class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()) : ConfigElement() {
+class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()) : ConfigElement(), CompositeConfig {
 
     fun contents() = contents.toMap()
-    operator fun get(path: String): ConfigElement? {
+    override operator fun get(path: String): ConfigElement? {
         val (key, rest) = parsePath(path)
 
         return when (val node = contents[key]) {
@@ -81,7 +87,12 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
         }
     }
 
-    operator fun set(path: String, value: String?) {
+    override operator fun set(path: String, value: ConfigElement) {
+        require(parsePath(path).second.isEmpty()) { "Cannot set a ConfigElement for multilevel $path, set a value instead" }
+        contents[path] = value
+    }
+
+    override operator fun set(path: String, value: String?) {
         val (key, rest) = parsePath(path)
 
         when (val element = contents[key]) {
@@ -134,10 +145,10 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
     }
 }
 
-class ConfigArray(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()) : ConfigElement() {
+class ConfigArray(private val contents: MutableMap<String, ConfigElement> = mutableMapOf()) : ConfigElement(), CompositeConfig {
     fun contents() = contents.values.toList()
 
-    operator fun get(path: String): ConfigElement? {
+    override operator fun get(path: String): ConfigElement? {
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
@@ -151,7 +162,12 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
         }
     }
 
-    operator fun set(path: String, value: String?) {
+    override operator fun set(path: String, value: ConfigElement) {
+        require(parsePath(path).second.isEmpty()) { "Cannot set a ConfigElement for multilevel $path, set a value instead" }
+        contents[path] = value
+    }
+
+    override operator fun set(path: String, value: String?) {
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
