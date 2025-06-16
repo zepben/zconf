@@ -146,6 +146,22 @@ class ConfigModelTest : FunSpec({
 
         parsedConfig shouldBe TestElement("1", 2, listOf(3, 4), true)
     }
+
+    test("setting a config element fails when key has multiple levels") {
+        val configObject = ConfigObject()
+        val configArray = ConfigArray()
+
+        configObject["foo"] = ConfigValue("bar")
+        configArray["0"] = ConfigValue("baz")
+
+        shouldThrow<IllegalArgumentException> {
+            configObject["foo.bar"] = ConfigValue("baz")
+        }.message shouldBe "Cannot set a ConfigElement for multilevel foo.bar, set a value instead"
+
+        shouldThrow<IllegalArgumentException> {
+            configArray["0.0"] = ConfigValue("baz")
+        }.message shouldBe "Cannot set a ConfigElement for multilevel 0.0, set a value instead"
+    }
 })
 
 @Serializable
