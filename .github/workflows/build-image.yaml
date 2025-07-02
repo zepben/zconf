@@ -2,11 +2,12 @@ name: Build Docker Image
 on:
   push:
   workflow_call:
-    deploy-nexus:
-      description: Also deploy on nexus
-      required: false
-      type: boolean
-      default: false 
+    inputs:
+      deploy-nexus:
+        description: Also deploy on nexus
+        required: false
+        type: boolean
+        default: false 
 
 env:
   REGISTRY_URL: "ghcr.io/${{ github.repository }}"
