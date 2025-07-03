@@ -1,13 +1,6 @@
 name: Build Docker Image
 on:
   push:
-  workflow_call:
-    inputs:
-      deploy-nexus:
-        description: Also deploy on nexus
-        required: false
-        type: boolean
-        default: false 
 
 env:
   REGISTRY_URL: "ghcr.io/${{ github.repository }}"
@@ -44,8 +37,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            name=${{ env.REGISTRY_URL }},enable=true
-            name=${{ secrets.NEXUS_DOCKER_REPO }}/zconf,enable=${{ inputs.deploy-nexus }}
+            ${{ env.REGISTRY_URL }}
+            ${{ secrets.NEXUS_DOCKER_REPO }}/zconf
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
