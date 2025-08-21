@@ -33,6 +33,13 @@ class SourceTypeTest : FunSpec({
         type.param shouldBe "ENV"
     }
 
+    test("parses file correctly") {
+        val type = SourceType.parse("file:///usr/local/bin/bash")
+
+        type.type shouldBe SourceType.FILE
+        type.param shouldBe "/usr/local/bin/bash"
+    }
+
     test("falls back to null if unknown") {
         val type = SourceType.parse("fake://ENV")
 

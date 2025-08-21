@@ -17,7 +17,8 @@ enum class SourceType(val protocol: String, val sourceProcessor: (String) -> Sou
     NULL("null", ::NullSourceProcessor),
     ENV_BLOB_GZ("env-blob-gz", ::EnvBlobGzSourceProcessor),
     ENV_BLOB("env-blob", ::EnvBlobSourceProcessor),
-    ENV_PREFIX("env-prefix", ::EnvPrefixSourceProcessor);
+    ENV_PREFIX("env-prefix", ::EnvPrefixSourceProcessor),
+    FILE("file", ::JsonFileSourceProcessor),;
 
     companion object  {
         private const val PROTOCOL_SEPARATOR = "://"

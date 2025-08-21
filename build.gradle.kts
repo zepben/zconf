@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.koTest)
+    alias(libs.plugins.googleDevTools)
 }
 
 group = "com.zepben.zconf"
@@ -52,6 +53,7 @@ kotlin {
 
         nativeTest.dependencies {
             implementation(libs.koTestFramework)
+            implementation(libs.koTestAssertions)
         }
     }
 }
