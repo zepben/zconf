@@ -9,6 +9,7 @@ import com.zepben.zconf.model.CompositeConfig
 import com.zepben.zconf.model.ConfigArray
 import com.zepben.zconf.model.ConfigElement
 import com.zepben.zconf.model.ConfigObject
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -17,11 +18,19 @@ import kotlinx.serialization.json.*
 
 open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
 
-    override fun execute(): ConfigElement {
-        val contents = SystemFileSystem.source(Path(input)).buffered().readString()
-        val json = Json.Default.decodeFromString<JsonObject>(contents)
+    private val logger = KotlinLogging.logger {}
 
-        return convertToIntermediateForm(json)
+    override fun execute(): ConfigElement {
+        try {
+            val contents = SystemFileSystem.source(Path(input)).buffered().readString()
+            val json = Json.Default.decodeFromString<JsonObject>(contents)
+
+            return convertToIntermediateForm(json)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to read JSON file at $input.. skipping.." }
+        }
+
+        return ConfigObject()
     }
 
     protected fun convertToIntermediateForm(json: JsonElement): ConfigObject {
