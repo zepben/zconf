@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Zeppelin Bend Pty Ltd
+ * Copyright 2026 Zeppelin Bend Pty Ltd
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,11 +31,15 @@ sealed class ConfigElement {
         return when (this) {
             is ConfigArray -> JsonArray(this.contents().map { it.toJson() })
             is ConfigObject -> JsonObject(this.contents().map { it.key to it.value.toJson() }.toMap())
-            is ConfigValue -> JsonPrimitive(this.value)
+            is ConfigValue<*> -> when (this.value) {
+                is Boolean -> JsonPrimitive(this.value)
+                is Number -> JsonPrimitive(this.value)
+                else -> JsonPrimitive(this.value.toString())
+            }
         }
     }
 
-    protected fun createArrayOrObject(rest: String, value: String?): ConfigElement {
+    protected fun <T> createArrayOrObject(rest: String, value: T?): ConfigElement {
         val (subKey, _) = parsePath(rest)
         val subIndex = subKey.toIntOrNull()
 
@@ -53,23 +57,27 @@ sealed class ConfigElement {
         return newElement
     }
 
-    abstract fun merge(other: ConfigElement?)
+    abstract fun merge(other: ConfigElement?): ConfigElement
 }
 
 interface CompositeConfig{
     operator fun set(path: String, value: ConfigElement)
-    operator fun set(path: String, value: String?)
+    operator fun <T> set(path: String, value: T?)
     operator fun get(path: String): ConfigElement?
 }
 
-data class ConfigValue(var value: String?) : ConfigElement() {
+data class ConfigValue<T>(val value: T?) : ConfigElement() {
 
-    override fun merge(other: ConfigElement?) {
+    override fun merge(other: ConfigElement?): ConfigElement {
         when (other) {
-            is ConfigValue -> value = other.value
-            null -> return
+            is ConfigValue<*> -> return ConfigValue(other.value)
+            null -> return this
             else -> throw IllegalStateException("Cannot merge with unlike type")
         }
+    }
+
+    override fun toString(): String {
+        return "ConfigValue(type: ${if (value !== null) value::class.simpleName else "null"}, value: $value)"
     }
 }
 
@@ -82,7 +90,7 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
         return when (val node = contents[key]) {
             is ConfigArray -> node[rest]
             is ConfigObject -> node[rest]
-            is ConfigValue -> node
+            is ConfigValue<*> -> node
             null -> null
         }
     }
@@ -92,15 +100,15 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
         contents[path] = value
     }
 
-    override operator fun set(path: String, value: String?) {
+    override operator fun <T> set(path: String, value: T?) {
         val (key, rest) = parsePath(path)
 
         when (val element = contents[key]) {
             is ConfigArray -> element[rest] = value
             is ConfigObject -> element[rest] = value
-            is ConfigValue -> {
+            is ConfigValue<*> -> {
                 require(rest.isEmpty()) { "Attempting to set $value at $path, but element not traversable" }
-                element.value = value
+                contents[key] = ConfigValue(value)
             }
 
             null -> {
@@ -110,7 +118,7 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
 
     }
 
-    private fun handleNullSet(rest: String, key: String, value: String?) {
+    private fun <T> handleNullSet(rest: String, key: String, value: T?) {
         if (rest.isEmpty()) {
             // if rest is empty we are ready to set a value
             contents[key] = ConfigValue(value)
@@ -121,25 +129,27 @@ class ConfigObject(private val contents: MutableMap<String, ConfigElement> = mut
         }
     }
 
-    override fun merge(other: ConfigElement?) {
+    override fun merge(other: ConfigElement?): ConfigObject {
         when (other) {
             is ConfigObject -> {
+                val newContents = contents.toMutableMap()
                 val allKeys = contents.keys + other.contents.keys
                 allKeys.forEach { key ->
                     val currentValue = contents[key]
                     val otherValue = other.contents[key]
 
                     if (currentValue != null && otherValue != null) {
-                        currentValue.merge(otherValue)
+                        newContents[key] = currentValue.merge(otherValue)
                     } else if (currentValue != null) {
                         return@forEach
                     } else if (otherValue != null) {
-                        contents[key] = otherValue
+                        newContents[key] = otherValue
                     }
                 }
+                return ConfigObject(newContents)
             }
 
-            null -> return
+            null -> return this
             else -> throw IllegalStateException("Cannot merge with unlike type")
         }
     }
@@ -157,7 +167,7 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
         return when (val node = contents[index.toString()]) {
             is ConfigArray -> node[rest]
             is ConfigObject -> node[rest]
-            is ConfigValue -> node
+            is ConfigValue<*> -> node
             null -> null
         }
     }
@@ -167,7 +177,7 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
         contents[path] = value
     }
 
-    override operator fun set(path: String, value: String?) {
+    override operator fun <T> set(path: String, value: T?) {
         val (key, rest) = parsePath(path)
         val index = key.toIntOrNull()
 
@@ -176,9 +186,9 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
         when (val element = contents[index.toString()]) {
             is ConfigArray -> element[rest] = value
             is ConfigObject -> element[rest] = value
-            is ConfigValue -> {
+            is ConfigValue<*> -> {
                 require(rest.isEmpty()) { "Attempting to set $value at $path, but element not traversable" }
-                element.value = value
+                contents[index.toString()] = ConfigValue(value)
             }
 
             null -> handleNullSet(rest, index, value)
@@ -186,30 +196,32 @@ class ConfigArray(private val contents: MutableMap<String, ConfigElement> = muta
     }
 
 
-    override fun merge(other: ConfigElement?) {
+    override fun merge(other: ConfigElement?): ConfigArray {
         when (other) {
             is ConfigArray -> {
+                val newContents = contents.toMutableMap()
                 val allKeys = contents.keys + other.contents.keys
                 allKeys.forEach { key ->
                     val currentValue = contents[key]
                     val otherValue = other.contents[key]
 
                     if (currentValue != null && otherValue != null) {
-                        currentValue.merge(otherValue)
+                        newContents[key] = currentValue.merge(otherValue)
                     } else if (currentValue != null) {
                         return@forEach
                     } else if (otherValue != null) {
-                        contents[key] = otherValue
+                        newContents[key] = otherValue
                     }
                 }
+                return ConfigArray(newContents)
             }
 
-            null -> return
+            null -> return this
             else -> throw IllegalStateException("Cannot merge with unlike type")
         }
     }
 
-    private fun handleNullSet(rest: String, index: Int, value: String?) {
+    private fun <T> handleNullSet(rest: String, index: Int, value: T?) {
         if (rest.isEmpty()) {
             // if rest is empty we are ready to set a value
             contents[index.toString()] = ConfigValue(value)

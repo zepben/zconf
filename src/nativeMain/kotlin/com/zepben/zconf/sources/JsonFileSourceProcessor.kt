@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Zeppelin Bend Pty Ltd
+ * Copyright 2026 Zeppelin Bend Pty Ltd
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,7 +47,7 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
     private fun convertToIntermediateForm(json: JsonElement, path: String, thing: CompositeConfig) {
         when (json) {
             is JsonNull -> return // We don't care about nulls
-            is JsonPrimitive -> thing[path.removePrefix(".")] = json.content
+            is JsonPrimitive -> thing[path.removePrefix(".")] = json.toKotlinValue()
             is JsonArray ->{
                 val arr = ConfigArray().apply { thing[path] = this } // Create the ConfigArray here and don't rely on the model doing it.
                 json.forEachIndexed { index, nextElement ->
@@ -68,4 +68,16 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
             }
         }
     }
+
+    private fun JsonPrimitive.toKotlinValue(): Any? =
+        when {
+            this is JsonNull -> null
+            isString -> content
+            booleanOrNull != null -> boolean
+            longOrNull != null -> long
+            doubleOrNull != null -> double
+            intOrNull != null -> int
+            floatOrNull != null -> float
+            else -> content
+        }
 }

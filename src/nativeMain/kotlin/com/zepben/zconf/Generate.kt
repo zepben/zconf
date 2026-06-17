@@ -34,7 +34,7 @@ class Generate: CliktCommand() {
 
     @OptIn(ExperimentalForeignApi::class)
     override fun run() {
-        val config = ConfigObject()
+        var config = ConfigObject()
         val resolvedSources = getenv(sourceEnv)?.toKString()?.split(",") ?: sources
 
         if (resolvedSources.isEmpty()) {
@@ -44,7 +44,7 @@ class Generate: CliktCommand() {
 
         resolvedSources.map { SourceType.parse(it) }
             .map { it.type.sourceProcessor.invoke(it.param) }
-            .forEach { config.merge(it.properties) }
+            .forEach { config = config.merge(it.properties) }
 
         OutputWriter().write(outputPath, config.toJson())
     }
