@@ -86,7 +86,7 @@ The intermediate representation is a recursive data structure that can be indexe
 
 - `ConfigObject` - similar to a JSON object, a map of configuration
 - `ConfigArray` - similar to a JSON array, implemented as a ConfigObject with numerical keys
-- `ConfigValue` - similar to a JSON primitive, a leaf node in the structure. Contains a string or null
+- `ConfigValue` - similar to a JSON primitive, a leaf node in the structure. Contains a primitive or null
 
 Given a root config, we are able to index through it:
 

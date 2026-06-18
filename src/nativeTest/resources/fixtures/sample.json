@@ -18,6 +18,12 @@
                 }
             ],
             "v1.kubernetes.zepben.com/node-class": "high-memory"
-        }
+        },
+        "numberThree": 3,
+        "numberThreeString": "3",
+        "pi": 3.14,
+        "piString": "3.14",
+        "isTrue": true,
+        "isTrueString": "true"
     }
 }

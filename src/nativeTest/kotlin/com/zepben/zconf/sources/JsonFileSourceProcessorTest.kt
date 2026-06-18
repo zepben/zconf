@@ -35,5 +35,11 @@ class JsonFileSourceProcessorTest : FunSpec({
         config["menu.value"] shouldBe ConfigValue("File")
         config["menu.popup.menuitem.0.value"] shouldBe ConfigValue("New")
         config["menu.popup.v1__kubernetes__zepben__com/node-class"] shouldBe ConfigValue("high-memory")
+        config["menu.numberThree"] shouldBe ConfigValue(3L)
+        config["menu.numberThreeString"] shouldBe ConfigValue("3")
+        config["menu.pi"] shouldBe ConfigValue(3.14)
+        config["menu.piString"] shouldBe ConfigValue("3.14")
+        config["menu.isTrue"] shouldBe ConfigValue(true)
+        config["menu.isTrueString"] shouldBe ConfigValue("true")
     }
 })

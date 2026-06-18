@@ -27,9 +27,19 @@ class ConfigModelTest : FunSpec({
         root["foo.0"] shouldBe null
     }
 
-    test("sets a key") {
+    test("sets a key with a string value") {
         root["foo"] = "bar"
         root["foo"] shouldBe ConfigValue("bar")
+    }
+
+    test("sets a key with a boolean value") {
+        root["foo"] = true
+        root["foo"] shouldBe ConfigValue(true)
+    }
+
+    test("sets a key with a number value") {
+        root["foo"] = 2
+        root["foo"] shouldBe ConfigValue(2)
     }
 
     test("sets nested yet") {
@@ -47,11 +57,15 @@ class ConfigModelTest : FunSpec({
         root["auth.perms.0"] = "read"
         root["auth.perms.1"] = "write"
         root["auth.other.0.key"] = "value"
+        root["auth.other.0.isTrue"] = true
+        root["auth.other.0.favouriteNumber"] = 2
 
         root["auth.type"] shouldBe  ConfigValue("entra")
         root["auth.perms.0"] shouldBe  ConfigValue("read")
         root["auth.perms.1"] shouldBe  ConfigValue("write")
         root["auth.other.0.key"] shouldBe  ConfigValue("value")
+        root["auth.other.0.isTrue"] shouldBe  ConfigValue(true)
+        root["auth.other.0.favouriteNumber"] shouldBe  ConfigValue(2)
     }
 
     test("throws when setting causes structure change") {
@@ -80,17 +94,23 @@ class ConfigModelTest : FunSpec({
             root["foo"] = "bar"
             root["auth.type"] = "test1"
             root["thing.0"] = "value2"
+            root["thing.1"] = true
+            root["thing.2"] = 2
 
             val otherRoot = ConfigObject()
             otherRoot["foo"] = "baz"
             otherRoot["auth.type"] = "test2"
             otherRoot["thing.0"] = "value2"
+            otherRoot["thing.1"] = false
+            otherRoot["thing.2"] = 3
 
-            root.merge(otherRoot)
+            root = root.merge(otherRoot)
 
             root["foo"] shouldBe ConfigValue("baz")
             root["auth.type"] shouldBe ConfigValue("test2")
             root["thing.0"] shouldBe ConfigValue("value2")
+            root["thing.1"] shouldBe ConfigValue(false)
+            root["thing.2"] shouldBe ConfigValue(3)
         }
 
         test("merges other with less keys") {
@@ -100,7 +120,7 @@ class ConfigModelTest : FunSpec({
             val otherRoot = ConfigObject()
             otherRoot["auth.type"] = "test2"
 
-            root.merge(otherRoot)
+            root = root.merge(otherRoot)
 
             root["foo"] shouldBe ConfigValue("bar")
             root["auth.type"] shouldBe ConfigValue("test2")
@@ -114,7 +134,7 @@ class ConfigModelTest : FunSpec({
             otherRoot["auth.type"] = "test2"
             otherRoot["auth.other"] = "value"
 
-            root.merge(otherRoot)
+            root = root.merge(otherRoot)
 
             root["foo"] shouldBe ConfigValue("bar")
             root["auth.type"] shouldBe ConfigValue("test2")
@@ -131,6 +151,17 @@ class ConfigModelTest : FunSpec({
                 root.merge(otherRoot)
                 Unit
             }
+        }
+
+        test("merges other with different value type") {
+            root["foo"] = "bar"
+
+            val otherRoot = ConfigObject()
+            otherRoot["foo"] = 2
+
+            root = root.merge(otherRoot)
+
+            root["foo"] shouldBe ConfigValue(2)
         }
     }
 
