@@ -29,7 +29,6 @@ open class EnvBlobSourceProcessor @OptIn(ExperimentalForeignApi::class) construc
     @OptIn(ExperimentalEncodingApi::class)
     override fun execute(): ConfigElement {
         val envValue = envFetcher(input) ?: return ConfigObject()
-
         val json = try {
             val decodedValue = Base64.Default.decode(envValue)
             Json.Default.parseToJsonElement(postProcessEnv(decodedValue))
