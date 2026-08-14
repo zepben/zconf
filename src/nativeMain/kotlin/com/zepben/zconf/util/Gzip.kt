@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-
 package com.zepben.zconf.util
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.cinterop.UnsafeNumber
 import kotlinx.cinterop.*
 import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
@@ -19,7 +19,7 @@ class Gzip {
         private val logger = KotlinLogging.logger {}
 
         private const val BUFFER_MAX = 1024
-        @OptIn(ExperimentalForeignApi::class)
+        @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
         fun decode(compressed: ByteArray): ByteArray {
             memScoped {
                 val stream = alloc<z_stream>()

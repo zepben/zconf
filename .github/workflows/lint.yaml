@@ -5,10 +5,10 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    container: zepben/pipeline-basic
+    container: zepben/pipeline-java
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Cache licence-check
         uses: actions/cache@v3
@@ -21,3 +21,6 @@ jobs:
         with:
           LC_URL: ${{ secrets.LC_URL }}
           PATH: "src"
+
+      - name: Build
+        run: ./gradlew build
