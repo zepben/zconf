@@ -18,10 +18,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlinx.serialization.json.*
 
 const val OPTIONAL_REF = "\$optionalRef"
+const val SECRET_REF = "\$secretRef"
+
+class SecretReferenceException(message: String) : IllegalArgumentException(message)
 
 open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
 
@@ -31,11 +35,14 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
         try {
             val contents = SystemFileSystem.source(Path(input)).buffered().readString()
             val json = Json.Default.decodeFromString<JsonObject>(contents)
-            val resolvedJson = resolveFileRefs(json, baseFile = Path(input))
+            val resolvedJson = resolveReferences(json, baseFile = Path(input))
                 ?: throw Exception("Failed to resolve root level $OPTIONAL_REF: $json")
 
             return convertToIntermediateForm(resolvedJson)
 
+        } catch (e: SecretReferenceException) {
+            logger.error(e) { "Failed to read secretRef file at $input.. bailing out.." }
+            throw e
         } catch (e: Exception) {
             logger.error(e) { "Failed to read JSON file at $input.. skipping.." }
         }
@@ -49,9 +56,25 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
         return accumulator
     }
 
-    private fun resolveFileRefs(element: JsonElement, baseFile: Path): JsonElement? {
+    private fun resolveReferences(element: JsonElement, baseFile: Path): JsonElement? {
         return when (element) {
             is JsonObject -> {
+
+
+                /*
+                 Handle $secretRefs. This feature replaces a single, scalar value, within a larger object. For example:
+
+                     {
+                       "username": "Obama",
+                       "password": { "$secretRef": "file:///obama/password.txt" }
+                     }
+
+                 Would populate the password, or fail if there was an issue reading /obama/password.txt
+
+                */
+                if (SECRET_REF in element) {
+                    return resolveSecretReference(element, baseFile)
+                }
                 /*
                  Handle $optionalRefs. The semantics work as follows. Given the following:
                       "metricsDatabase": {
@@ -62,7 +85,6 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
                  In the case that it does not exist, "metricsDatabase" key will be removed.
                  In the case that it exists but is not valid JSON, then we log an error and fail.
                  */
-
                 val ref = element[OPTIONAL_REF]?.jsonPrimitive?.contentOrNull
                 if (ref != null) {
                     require(ref.startsWith("file://")) {
@@ -85,21 +107,45 @@ open class JsonFileSourceProcessor(input: String) : SourceProcessor(input) {
                             e,
                         )
                     }
-                    return resolveFileRefs(resolved, refPath)
+                    return resolveReferences(resolved, refPath)
                 }
 
                 JsonObject(
                     element.mapNotNull { (k, v) ->
-                        resolveFileRefs(v, baseFile)?.let { k to it }
+                        resolveReferences(v, baseFile)?.let { k to it }
                     }.toMap()
                 )
             }
 
             is JsonArray -> JsonArray(
-                element.mapNotNull { resolveFileRefs(it, baseFile) }
+                element.mapNotNull { resolveReferences(it, baseFile) }
             )
 
             else -> element
+        }
+    }
+
+    private fun resolveSecretReference(
+        directive: JsonObject,
+        baseFile: Path,
+    ): JsonPrimitive {
+        try {
+            require(directive.size == 1)
+            val ref = (directive[SECRET_REF] as? JsonPrimitive)
+                ?.takeIf { it.isString }
+                ?.content
+            require(ref?.startsWith("file://") == true)
+
+            val refPath = Path(ref.removePrefix("file://"))
+            require(SystemFileSystem.metadataOrNull(refPath)?.isRegularFile == true)
+
+            val bytes = SystemFileSystem.source(refPath).buffered().use { it.readByteArray() }
+            val value = bytes.decodeToString(throwOnInvalidSequence = true)
+            return JsonPrimitive(value)
+        } catch (_: Exception) {
+            throw SecretReferenceException(
+                "Failed to resolve $SECRET_REF in '$baseFile'"
+            )
         }
     }
 

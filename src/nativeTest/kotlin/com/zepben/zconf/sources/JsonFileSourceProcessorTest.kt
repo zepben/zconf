@@ -11,6 +11,7 @@ package com.zepben.zconf.sources
 import com.zepben.zconf.model.ConfigObject
 import com.zepben.zconf.model.ConfigValue
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.cinterop.*
 import kotlinx.io.Buffer
@@ -38,6 +39,16 @@ class JsonFileSourceProcessorTest : FunSpec({
         path.parent?.let { SystemFileSystem.createDirectories(it) }
         SystemFileSystem.sink(path).use { sink ->
             val buffer = Buffer().apply { write(json.encodeToByteArray()) }
+            sink.write(buffer, buffer.size)
+        }
+        return path.toString()
+    }
+
+    fun writeTestBytes(name: String, bytes: ByteArray): String {
+        val path = Path("$testConfigDir/$name")
+        path.parent?.let { SystemFileSystem.createDirectories(it) }
+        SystemFileSystem.sink(path).use { sink ->
+            val buffer = Buffer().apply { write(bytes) }
             sink.write(buffer, buffer.size)
         }
         return path.toString()
@@ -239,6 +250,77 @@ class JsonFileSourceProcessorTest : FunSpec({
             )
 
             loadConfig(path).shouldBeEmpty()
+        }
+    }
+
+    context("\$secretRef") {
+        test("replaces leaves with the exact secret value") {
+            val secret = "quote: \"; backslash: \\; unicode: ☃\ntrailing newline\n"
+            val secretPath = writeTestBytes("secret-ref/value", secret.encodeToByteArray())
+            val path = writeTestConfig(
+                "secret-ref/exact-value.json",
+                """
+                {
+                  "database": {
+                    "url": { "$SECRET_REF": "${fileRef(secretPath)}" },
+                    "driver": "org.postgresql.Driver"
+                  },
+                  "items": [
+                    { "$SECRET_REF": "${fileRef(secretPath)}" },
+                    "unchanged"
+                  ]
+                }
+                """.trimIndent(),
+            )
+
+            loadConfig(path).shouldHavePaths(
+                mapOf(
+                    "database.url" to ConfigValue(secret),
+                    "database.driver" to ConfigValue("org.postgresql.Driver"),
+                    "items.0" to ConfigValue(secret),
+                    "items.1" to ConfigValue("unchanged"),
+                ),
+            )
+        }
+
+        test("fails for unusable secret targets") {
+            val directoryPath = "$testConfigDir/secret-ref/directory-target"
+            SystemFileSystem.createDirectories(Path(directoryPath))
+            val invalidUtf8Path = writeTestBytes(
+                "secret-ref/invalid-utf8",
+                byteArrayOf(0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0xc3.toByte(), 0x28),
+            )
+            val targets = listOf(
+                "missing" to "$testConfigDir/secret-ref/does-not-exist",
+                "directory" to directoryPath,
+                "invalid UTF-8" to invalidUtf8Path,
+            )
+
+            targets.forEach { (name, target) ->
+                val path = writeTestConfig(
+                    "secret-ref/failing-$name.json",
+                    """{ "value": { "$SECRET_REF": "${fileRef(target)}" } }""",
+                )
+
+                shouldThrow<SecretReferenceException> { loadConfig(path) }
+            }
+        }
+
+        test("rejects invalid directive objects") {
+            val invalidDirectives = listOf(
+                "sibling" to """{ "$SECRET_REF": "file:///unused", "other": true }""",
+                "non-string" to """{ "$SECRET_REF": 123 }""",
+                "scheme" to """{ "$SECRET_REF": "https://example.com/secret" }""",
+            )
+
+            invalidDirectives.forEach { (name, directive) ->
+                val path = writeTestConfig(
+                    "secret-ref/invalid-$name.json",
+                    """{ "value": $directive }""",
+                )
+
+                shouldThrow<SecretReferenceException> { loadConfig(path) }
+            }
         }
     }
 })
